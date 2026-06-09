@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // Traemos el archivo funciones.js
-import { validarRutChileno, verificarEdad } from '../funciones';
+import { validarRutChileno} from '../funciones';
 
 function Carrito({
     carrito, total, eliminarProducto, cambiarCantidad,
