@@ -77,7 +77,7 @@ function Inicio(props) {
                         {/* CATEGORIA DE MILAPIZZAS */}
                         {(props.filtroCategoria === 'todo' || props.filtroCategoria === 'milapizzas') && (
                             <div>
-                                <h5 className="text-danger mb-3 fw-bold">MILAPIZZAS</h5>
+                                <h5 className="text-danger mb-3 fw-bold">MILAPIZZAS (para 4 personas)</h5>
                                 <div className="row mb-5">
                                     {props.productosMilapizzas.map((prodPiz, idx) => (
                                         <Producto key={idx} p={prodPiz} onAgregar={props.agregarProducto} formatearPrecio={props.formatearPrecio} />
