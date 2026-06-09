@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-// Traemos el archivo funciones.js
-import { validarRutChileno} from '../funciones';
+// Traemos las funciones necesarias desde funciones.js
+import { validarRutChileno, verificarEdad } from '../funciones';
 
 function Carrito({
     carrito, total, eliminarProducto, cambiarCantidad,
@@ -57,7 +57,6 @@ function Carrito({
     const costoDelivery = deliveryChecked ? 2500 : 0;
     const totalFinal = total + costoDelivery;
 
-    
     const enviarForm = (e) => {
         e.preventDefault();
         setErrorFormulario('');
@@ -106,7 +105,7 @@ function Carrito({
             }
         }
 
-        // Si marcaron delivery, obliga a que escriban la dirección y elijan una zona
+        // Si marcaron delivery
         if (deliveryChecked && (direccion.trim() === "" || zona === "")) {
             setErrorFormulario("Si pides delivery, debes poner tu dirección y sector.");
             return;
@@ -126,7 +125,7 @@ function Carrito({
     return (
         <div className="card p-4 carrito sticky-top">
             {!verFormulario ? (
-                /* MUESTRA LA LISTA DE PRODUCTOS QUE VAN EN EL CARRO */
+                /* LISTA DE PRODUCTOS QUE VAN EN EL CARRO */
                 <div>
                     <h5 className="fw-bold mb-3 border-bottom border-secondary pb-2">Tu Carrito</h5>
                     {carrito.length === 0 ? (
@@ -192,7 +191,7 @@ function Carrito({
 
                     <input type="text" className="form-control form-control-sm mb-2 text-white bg-dark border-secondary" placeholder="Correo" value={correo} onChange={e => setCorreo(e.target.value)} />
 
-                    {/* Esto solo aparece si lleva alcohol*/}
+                    {/* si lleva alcohol*/}
                     {llevaCerveza && (
                         <div className="p-2 border border-secondary rounded mb-2 bg-dark">
                             <label className="text-warning fw-bold d-block mb-1" style={{ fontSize: '0.75rem' }}>Ingresa tu fecha de nacimiento:</label>
@@ -205,6 +204,12 @@ function Carrito({
                                 max={fechaMax}
                                 onClick={(e) => e.target.showPicker?.()}
                             />
+                           
+                            {fechaNacimiento && verificarEdad(fechaNacimiento) > 0 && (
+                                <span className="text-white-50 d-block mt-1 ps-1" style={{ fontSize: '0.7rem' }}>
+                                    Edad: {verificarEdad(fechaNacimiento)} años.
+                                </span>
+                            )}
                         </div>
                     )}
 
