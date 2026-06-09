@@ -34,7 +34,7 @@ function Terminos() {
                         Cumpliendo con la Ley Nº 19.925, no vendemos bebidas alcohólicas a menores de 18 años. Si agregas una cerveza al carrito, el sistema abrirá obligatoriamente una casilla para que pongas tu fecha de nacimiento.
                     </p>
                     <p className="text-light small">
-                        La aplicación calcula tu edad al instante. Si eres menor de edad, el sistema bloqueará automáticamente el pedido y no te dejará terminar la compra de ninguna forma.
+                        La aplicación calcula tu edad al instante. 
                     </p>
                 </div>
 

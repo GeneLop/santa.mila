@@ -6,7 +6,7 @@ export const encriptarRut = (rut) => {
     return CryptoJS.AES.encrypt(rut, 'clave-secreta-mila').toString();
 };
 
-// Funcion para tomar la lista de pedidos y la guarda en el LocalStorage del computador 
+// Funcion para el LocalStorage
 export const guardarPedidos = (historial) => {
     localStorage.setItem('historial_compras_mila', JSON.stringify(historial));
 };
@@ -19,36 +19,28 @@ export const cargarPedidos = () => {
 
 
 // VALIDACIONES DEL RUT Y CALCULO DE LA EDAD
-// FEsta funcion permite revisar si el RUT chileno es correcto o no
-export const validarRutChileno = (textoRut) => {
-    let limpio = textoRut.replace(/\./g, '').replace(/ /g, '').toUpperCase();
-    if (!limpio.includes('-')) return false; // Si no tiene guion, no sirve
+export const validarRutChileno = (rut) => {
+    if (!rut) return false;
 
-    let partes = limpio.split('-');
-    let numero = partes[0];
-    let digito = partes[1];
-
-    // Validamos el largo del número del RUT
-    if (numero.length < 7 || numero.length > 8 || digito.length !== 1) return false;
-
-    // Ciclo for para hacer la multiplicación del RUT del 2 al 7
-    let suma = 0;
-    let factor = 2;
-    for (let i = numero.length - 1; i >= 0; i--) {
-        suma = suma + (Number(numero[i]) * factor);
-        factor = factor === 7 ? 2 : factor + 1;
+    // Limpiamos el RUT de puntos y guiones
+    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase().trim();
+    if (rutLimpio.length < 2) return false;
+    const numeros = rutLimpio.slice(0, -1);
+    const esRepetido = /^(\d)\1+$/.test(numeros);
+    if (esRepetido) {
+        return false;
     }
-
-    let resto = suma % 11;
-    let res = 11 - resto;
-
-    // digito verificador
-    let dvReal = '';
-    if (res === 11) dvReal = '0';
-    else if (res === 10) dvReal = 'K';
-    else dvReal = res.toString();
-
-    return digito === dvReal;
+    const dv = rutLimpio.slice(-1);
+    
+    let suma = 0;
+    let multiplicador = 2;
+    for (let i = numeros.length - 1; i >= 0; i--) {
+        suma += parseInt(numeros[i]) * multiplicador;
+        multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+    }
+    const dvEsperado = 11 - (suma % 11);
+    let dvCalc = dvEsperado === 11 ? '0' : dvEsperado === 10 ? 'K' : dvEsperado.toString();
+    return dv === dvCalc;
 };
 
 //ALGORITMO PARA CALCULAR LA EDAD DEL CLIENTE, EN EL CASO DE LA PAGINA PARA VER SI PUEDE O NO COMPRAR ALCOHOL
@@ -57,11 +49,14 @@ export const verificarEdad = (fechaNacimiento) => {
     const diaHoy = new Date();
     const cumple = new Date(fechaNacimiento);
 
-    // Restamos los años para tener la edad
+    if (cumple > diaHoy) return 0; 
+
     let edad = diaHoy.getFullYear() - cumple.getFullYear();
     const mes = diaHoy.getMonth() - cumple.getMonth();
     if (mes < 0 || (mes === 0 && diaHoy.getDate() < cumple.getDate())) {
         edad--;
     }
+
+    if (edad > 120) return 0; 
     return edad;
 };

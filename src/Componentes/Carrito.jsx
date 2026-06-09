@@ -18,6 +18,22 @@ function Carrito({
     const [fechaNacimiento, setFechaNacimiento] = useState('');
     const [errorFormulario, setErrorFormulario] = useState('');
 
+    // Función interna para formatear el RUT automáticamente con puntos y guión
+    const formatearRut = (valor) => {
+        let limpio = valor.replace(/[^0-9kK]/g, '').toUpperCase();
+        if (!limpio) return '';
+        let cuerpo = limpio.slice(0, -1);
+        let dv = limpio.slice(-1);
+        if (limpio.length === 1) return limpio;
+        cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return cuerpo + '-' + dv;
+    };
+
+    const handleRutChange = (e) => {
+        const valorFormateado = formatearRut(e.target.value);
+        setRut(valorFormateado);
+    };
+
     // For para recorrer el carrito y ver si lleva alcohol, así  se puede pedir la edad después
     let llevaCerveza = false;
     for (let i = 0; i < carrito.length; i++) {
@@ -28,15 +44,20 @@ function Carrito({
         }
     }
 
-    // Llamamos a la función  para calcular la edad con la fecha ingresada
-    const edadCliente = verificarEdad(fechaNacimiento);
-    const esMayor = edadCliente >= 18;
+    // LIMITES DE EDAD
+    const hoy = new Date();
+    
+    const maxAnio = hoy.getFullYear() - 18;
+    const fechaMax = `${maxAnio}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
 
-    // Suma el costo de envío de 2500 pesos si marcaron la opción de delivery
+    const minAnio = hoy.getFullYear() - 120;
+    const fechaMin = `${minAnio}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+    // Suma 2500 pesos si marcaron la opción de delivery
     const costoDelivery = deliveryChecked ? 2500 : 0;
     const totalFinal = total + costoDelivery;
 
-    // Función que se ejecuta al apretar el botón de enviar el formulario
+    
     const enviarForm = (e) => {
         e.preventDefault();
         setErrorFormulario('');
@@ -66,7 +87,6 @@ function Carrito({
             return;
         }
 
-        // Expresión regular que exige texto antes del @, texto después, y un punto seguido de letras al final
         const regexCorreo = /^[a-zA-Z0-0._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
         if (!regexCorreo.test(correo.trim())) {
@@ -74,14 +94,14 @@ function Carrito({
             return;
         }
 
-        // Bloquea la compra si lleva cerveza y el calculo de la edad dio menor de 18
+        // Bloquea la compra si lleva cerveza 
         if (llevaCerveza) {
             if (fechaNacimiento === "") {
                 setErrorFormulario("Debes ingresar tu fecha de nacimiento para verificar tu edad.");
                 return;
             }
-            if (!esMayor) {
-                alert("VENTA RECHAZADA: Contiene alcohol y eres menor de edad.");
+            if (fechaNacimiento > fechaMax || fechaNacimiento < fechaMin) {
+                setErrorFormulario("Por favor, selecciona una fecha de nacimiento válida.");
                 return;
             }
         }
@@ -92,16 +112,14 @@ function Carrito({
             return;
         }
 
-        // Valida el resto de selectores y el checkbox de los términos
+        // Valida selectores y checkbox 
         if (pago === "") { setErrorFormulario("Elige cómo vas a pagar."); return; }
         if (acepta === false) { setErrorFormulario("Debes aceptar los términos y condiciones."); return; }
 
-        // Saca el cálculo del 1% para los puntos y junta los datos del despacho
         const puntosCalculados = Math.round(total * 0.01);
         const tipoEntrega = deliveryChecked ? "Delivery" : "Retiro";
         const direccionCompleta = deliveryChecked ? `${direccion}, Sector ${zona}` : "Retiro en Local";
 
-        // Le manda los datos ya validados a la función que procesa el pedido en App.js
         onFinalizar(rut, nombre, puntosCalculados, tipoEntrega, direccionCompleta, pago);
     };
 
@@ -159,7 +177,7 @@ function Carrito({
 
                     <div className="mb-2">
                         <label className="form-label fw-bold m-0 ps-1" style={{ fontSize: '0.7rem' }}>Ingresa tu RUT para acumular los puntos:</label>
-                        <input type="text" className="form-control form-control-sm text-white bg-dark border-secondary font-monospace" placeholder="RUT (Ej: 12345678-K)" value={rut} onChange={e => setRut(e.target.value)} />
+                        <input type="text" className="form-control form-control-sm text-white bg-dark border-secondary font-monospace" placeholder="RUT (Ej: 12.345.678-K)" value={rut} onChange={handleRutChange} maxLength="12" />
                     </div>
 
                     <div className="row g-1 mb-2">
@@ -178,12 +196,15 @@ function Carrito({
                     {llevaCerveza && (
                         <div className="p-2 border border-secondary rounded mb-2 bg-dark">
                             <label className="text-warning fw-bold d-block mb-1" style={{ fontSize: '0.75rem' }}>Ingresa tu fecha de nacimiento:</label>
-                            <input type="date" className="form-control form-control-sm bg-dark text-white border-secondary mb-2" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} />
-                            {fechaNacimiento && (
-                                <div className={`text-center p-1 rounded small fw-bold ${esMayor ? 'text-success bg-success bg-opacity-10' : 'text-danger bg-danger bg-opacity-10'}`}>
-                                    {esMayor ? `Tienes ${edadCliente} años, Puedes comprar alcohol.` : `Tienes ${edadCliente} años, No puedes comprar alcohol.`}
-                                </div>
-                            )}
+                            <input 
+                                type="date" 
+                                className="form-control form-control-sm bg-dark text-white border-secondary" 
+                                value={fechaNacimiento} 
+                                onChange={e => setFechaNacimiento(e.target.value)} 
+                                min={fechaMin} 
+                                max={fechaMax}
+                                onClick={(e) => e.target.showPicker?.()}
+                            />
                         </div>
                     )}
 
@@ -220,7 +241,6 @@ function Carrito({
                         <span className="h5 fw-bold text-danger m-0">{formatearPrecio(totalFinal)}</span>
                     </div>
 
-                    {/* Caja que muestra el mensaje si fall alguna de las validaciones de arriba */}
                     {(errorFormulario || mensajeError) && (
                         <div className="alert alert-danger bg-danger text-white text-center fw-bold border-0 py-1 my-2 rounded shadow-sm d-flex align-items-center justify-content-center" style={{ fontSize: '0.75rem', height: '31px', lineHeight: '1.2' }}>
                             {errorFormulario || mensajeError}
